@@ -6,5 +6,6 @@
 #include <iostream>
 #include "lock/locker.h"
 #include <threadpool/threadpool.h>
+#include "logger/block_queue.h"
 
 // TODO: Reference additional headers your program requires here.
