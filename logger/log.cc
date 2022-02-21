@@ -1,4 +1,6 @@
 #include "log.h"
+
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
@@ -45,10 +47,11 @@ void Log::Init(const char* file_name, int log_buf_size, int max_lines, int max_q
              log_name_);
   }
   fp_ = fopen(log_full_name, "a");
+  today_ = brok_time->tm_mday;
   return; fp_ != NULL;
 }
 
-void Log::thread_write_file(void *arg) {
+void* Log::thread_write_file(void *arg) {
   GetInstance()->async_write_log();
 }
 
@@ -58,5 +61,32 @@ void Log::async_write_log() {
     mutex_.Lock();
     fputs(log.c_str(), fp_);
     mutex_.Unlock();
+  }
+}
+
+void Log::flush() {
+  mutex_.Lock();
+  fflush(fp_);
+  mutex_.Unlock();
+}
+
+void Log::write(int level, const char* format, ...) {
+  time_t now = time(NULL);
+  struct tm* brok_tm = localtime(&now);
+
+  mutex_.Lock();
+
+  //create new log files
+  if (today_ != brok_tm->tm_mday || cur_lines_ >= max_lines_) {
+
+    fflush(fp_);
+    fclose(fp_);
+    char prefix[16] = {0};
+    char new_log[256] = {0};
+    sprintf(prefix, "%d_%02d_%02d", brok_tm->tm_year + 1900, brok_tm->tm_mon + 1, brok_tm->tm_mday);
+
+    if (today_ != brok_tm->tm_mday) {
+      snprintf()
+    }
   }
 }
