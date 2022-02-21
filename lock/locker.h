@@ -54,6 +54,10 @@ public:
     return pthread_mutex_unlock(&mutex_) == 0;
   }
 
+  pthread_mutex_t* Get() {
+    return &mutex_;
+  }
+
 private:
   pthread_mutex_t mutex_;
 };
