@@ -8,6 +8,6 @@ project ("httpserver")
 include_directories(.)
 
 # Add source to this project's executable.
-add_executable (httpserver "httpserver.cpp" "httpserver.h" "lock/locker.h" "threadpool/threadpool.h" "CGImysql/sql_connection_pool.h" "threadpool/threadpool.cc" "http/http_conn.h" "http/http_conn.cc" "logger/block_queue.h" "logger/log.h")
+add_executable (httpserver "httpserver.cpp" "httpserver.h" "lock/locker.h" "threadpool/threadpool.h" "CGImysql/sql_connection_pool.h" "threadpool/threadpool.cc" "http/http_conn.h" "http/http_conn.cc" "logger/block_queue.h" "logger/log.h" "logger/log.cc")
 
 # TODO: Add tests and install targets if needed.
