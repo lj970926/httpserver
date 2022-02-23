@@ -21,7 +21,7 @@ void Log::Init(const char* file_name, int log_buf_size, int max_lines, int max_q
     is_async_mode_ = true;
     log_queue_ = new BlockQueue<string>(max_queue_size);
     pthread_t tid;
-    pthread_create(&tid, NULL, thread_write_file, NULL);
+    pthread_create(&tid, NULL, ThreadWriteFile, NULL);
   }
 
   log_buf_ = new char[log_buf_size];
@@ -53,7 +53,7 @@ void Log::Init(const char* file_name, int log_buf_size, int max_lines, int max_q
   return; fp_ != NULL;
 }
 
-void* Log::thread_write_file(void *arg) {
+void* Log::ThreadWriteFile(void *arg) {
   GetInstance()->async_write_log();
 }
 
@@ -66,13 +66,13 @@ void Log::async_write_log() {
   }
 }
 
-void Log::flush() {
+void Log::Flush() {
   mutex_.Lock();
   fflush(fp_);
   mutex_.Unlock();
 }
 
-void Log::write(int level, const char* format, ...) {
+void Log::Write(int level, const char* format, ...) {
   time_t now = time(NULL);
   struct tm* brok_tm = localtime(&now);
   struct timeval time_val = {0, 0};

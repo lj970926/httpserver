@@ -11,9 +11,9 @@ class Log {
 public:
   static Log* GetInstance();
   void Init(const char* file_name, int log_buf_size, int max_lines, int max_queue_size = 0);
-  static void* thread_write_file(void* arg);
-  void flush();
-  void write(int level, const char* format, ...);
+  static void* ThreadWriteFile(void* arg);
+  void Flush();
+  void Write(int level, const char* format, ...);
 private:
   void async_write_log();
   Log();
@@ -32,3 +32,8 @@ private:
 
   int today_;
 };
+
+#define LOG_DEBUG(format, ...) {Log::GetInstance()->Write(0, format, ##__VA_ARGS__); Log::GetInstance()->Flush();}
+#define LOG_INFO(format, ...) {Log::GetInstance()->Write(1, format, ##__VA_ARGS__); Log::GetInstance()->Flush();}
+#define LOG_WARN(format, ...) {Log::GetInstance()->Write(2, format, ##__VA_ARGS__); Log::GetInstance()->Flush();}
+#define LOG_ERROR(format, ...) {Log::GetInstance()->Write(3, format, ##__VA_ARGS__); Log::GetInstance()->Flush();}
