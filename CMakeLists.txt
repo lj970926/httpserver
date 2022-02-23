@@ -12,7 +12,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # Add source to this project's executable.
-add_executable (httpserver "httpserver.cpp" "httpserver.h" "lock/locker.h" "threadpool/threadpool.h" "CGImysql/sql_connection_pool.h" "threadpool/threadpool.cc" "http/http_conn.h" "http/http_conn.cc" "logger/block_queue.h" "logger/log.h" "logger/log.cc")
+add_executable (httpserver "httpserver.cpp" "httpserver.h" "lock/locker.h" "threadpool/threadpool.h" "CGImysql/sql_connection_pool.h" "threadpool/threadpool.cc" "http/http_conn.h" "http/http_conn.cc" "logger/block_queue.h" "logger/log.h" "logger/log.cc" CGImysql/sql_connection_pool.cc)
 
 #link pthread and mysqlclient
 target_link_libraries(httpserver Threads::Threads)
