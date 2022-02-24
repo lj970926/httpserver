@@ -44,5 +44,28 @@ void ConnectionPool::init(const string &host, const string &user, const string &
 }
 
 MYSQL* ConnectionPool::GetConnection() {
+  MYSQL* conn = NULL;
 
+  if (pool_.empty())
+    return NULL;
+
+  sem_.Wait();
+  mutex_.Lock();
+  conn = pool_.front();
+  pool_.pop_front();
+  --num_free_con_;
+  mutex_.Unlock();
+  return conn;
+
+}
+
+bool ConnectionPool::ReleaseConnection(MYSQL *conn) {
+  if (!conn)
+    return false;
+  mutex_.Lock();
+  pool_.push_back(conn);
+  ++num_free_con_;
+  mutex_.Unlock();
+  sem_.Post();
+  return true;
 }

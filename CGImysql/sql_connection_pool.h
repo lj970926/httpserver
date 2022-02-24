@@ -14,6 +14,10 @@ public:
   MYSQL* GetConnection();
   void
   init(const string &host, const string &user, const string &passwd, const string &db_name, int port, int max_conn);
+
+  bool ReleaseConnection(MYSQL* conn);
+  int NumFreeConnection();
+
 private:
   list<MYSQL *> pool_;
   string host_;
