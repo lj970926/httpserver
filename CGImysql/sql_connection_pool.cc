@@ -11,7 +11,7 @@ ConnectionPool* ConnectionPool::GetInstance() {
   return &conn;
 }
 
-void ConnectionPool::init(const string &host, const string &user, const string &passwd, const string &db_name, int port,
+void ConnectionPool::Init(const string &host, const string &user, const string &passwd, const string &db_name, int port,
                           int max_conn) {
   host_ = host;
   user_ = user;
@@ -25,7 +25,7 @@ void ConnectionPool::init(const string &host, const string &user, const string &
     con = mysql_init(NULL);
 
     if (con == NULL) {
-      LOG_ERROR("Mysql init error");
+      LOG_ERROR("Mysql Init error");
       exit(1);
     }
 
@@ -68,4 +68,23 @@ bool ConnectionPool::ReleaseConnection(MYSQL *conn) {
   mutex_.Unlock();
   sem_.Post();
   return true;
+}
+
+int ConnectionPool::NumFreeConnection() {
+  return num_free_con_;
+}
+
+void ConnectionPool::Destroy() {
+  mutex_.Lock();
+  for (MYSQL* conn : pool_)
+    mysql_close(conn);
+
+  num_free_con_ = 0;
+  pool_.clear();
+
+  mutex_.Unlock();
+}
+
+ConnectionPool::~ConnectionPool() {
+  Destroy();
 }

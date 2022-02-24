@@ -13,12 +13,15 @@ public:
   static ConnectionPool* GetInstance();
   MYSQL* GetConnection();
   void
-  init(const string &host, const string &user, const string &passwd, const string &db_name, int port, int max_conn);
+  Init(const string &host, const string &user, const string &passwd, const string &db_name, int port, int max_conn);
 
   bool ReleaseConnection(MYSQL* conn);
   int NumFreeConnection();
+  void Destroy();
 
 private:
+  ~ConnectionPool();
+
   list<MYSQL *> pool_;
   string host_;
   string user_;
