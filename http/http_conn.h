@@ -60,6 +60,7 @@ private:
   bool __ProcessWrite(HTTPCode ret);
   char* line() { return read_buf_ + start_line_; }
   LineStatus __ParseLine();
+  HTTPCode Response();
 
   int sockfd_;
   struct sockaddr_in addr_;

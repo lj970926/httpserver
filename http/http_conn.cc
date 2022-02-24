@@ -1,6 +1,4 @@
 #include "http_conn.h"
-#include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -96,16 +94,27 @@ HTTPConnection::HTTPCode HTTPConnection::__ProcessRead() {
       break;
     }
     case CHECK_STATE_HEADER: {
-      if (__ParseHeader(text) == BAD_REQUEST)
+      HTTPCode ret = __ParseHeader(text);
+      if (ret == BAD_REQUEST)
         return BAD_REQUEST;
+
+      if (ret == GET_REQUEST)   //No content
+        return Response();
+
+      line_status = LINE_OPEN;
       break;
     }
 
     case CHECK_STATE_CONTENT: {
+      if (__ParseContent(text) == GET_REQUEST)
+        return Response();
       break;
     }
+    default:
+      return INTERNAL_ERROR;
     }
   }
+  return NO_REQUEST;
 }
 
 HTTPConnection::LineStatus HTTPConnection::__ParseLine() {
@@ -178,6 +187,7 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseRequestLine(char* text) {
 
 HTTPConnection::HTTPCode HTTPConnection::__ParseHeader(char* text) {
   if (text[0] == '\0') {
+    //find empty line
     if (content_length_ == 0)
       return GET_REQUEST;
     else {
@@ -208,5 +218,9 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseHeader(char* text) {
   }
 
   return NO_REQUEST;
+}
+
+HTTPConnection::HTTPCode HTTPConnection::Response() {
+  return BAD_REQUEST;
 }
 
