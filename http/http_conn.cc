@@ -305,3 +305,26 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseContent(char* text) {
   return NO_REQUEST;
 }
 
+bool HTTPConnection::__ProcessWrite(HTTPCode ret) {
+  switch (ret) {
+  case INTERNAL_ERROR:
+    
+  }
+}
+
+bool HTTPConnection::__AddStatusLine(int status, const char* title) {
+  //TODO
+}
+
+bool HTTPConnection::__AddHeaders(const int content_length) {
+  //TODO
+}
+
+bool HTTPConnection::__AddContent(const char* content) {
+  //TODO
+}
+
+bool HTTPConnection::__AddResponse(const char* format, ...) {
+  if (write_idx_ > )
+}
+

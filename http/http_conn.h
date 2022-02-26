@@ -70,6 +70,10 @@ private:
   char* line() { return read_buf_ + start_line_; }
   LineStatus __ParseLine();
   HTTPCode Response();
+  bool __AddResponse(const char* format, ...);
+  bool __AddStatusLine(int status, const char* title);
+  bool __AddHeaders(const int content_length);
+  bool __AddContent(const char* content);
 
   int sockfd_;
   struct sockaddr_in addr_;
@@ -79,6 +83,8 @@ private:
   int read_idx_ = 0;
   int checked_idx_ = 0;
   int start_line_ = 0;
+
+  int write_idx_ = 0;
 
   CheckState check_state_;
   Method method_;
