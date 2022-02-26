@@ -1,9 +1,12 @@
 #include "http_conn.h"
+#include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <sys/mman.h>
 #include <string>
 
 using namespace std;
@@ -278,7 +281,16 @@ HTTPConnection::HTTPCode HTTPConnection::Response() {
       file_path += url_;
     }
 
-    //TODO
+    if (stat(file_path.c_str(), &file_stat_) < 0)
+      return NO_RESOURCE;
+    if (!(file_stat_.st_mode & S_IROTH))
+      return FORBIDDEN_REQUEST;
+    if (!S_ISREG(file_stat_.st_mode))
+      return BAD_REQUEST;
+    int fd = open(file_path.c_str(), O_RDONLY);
+    file_address_ = (char*)mmap(0, file_stat_.st_size, PROT_READ, MAP_PRIVATE, 0);
+    close(fd);
+    return FILE_REQUEST;
     
   }
 }

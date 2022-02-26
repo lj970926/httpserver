@@ -1,5 +1,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <string>
 #include <unordered_map>
@@ -42,7 +43,10 @@ public:
     NO_REQUEST = 0,
     GET_REQUEST,
     BAD_REQUEST,
-    INTERNAL_ERROR
+    INTERNAL_ERROR,
+    NO_RESOURCE,
+    FORBIDDEN_REQUEST,
+    FILE_REQUEST
   };
 
   HTTPConnection() {}
@@ -90,5 +94,6 @@ private:
   std::unordered_map<std::string, std::string> user_;
   Mutex user_lock_;
   MYSQL* sql_conn_;
-
+  struct stat file_stat_;
+  char* file_address_;
 };
