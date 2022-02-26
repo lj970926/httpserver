@@ -1,6 +1,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <string>
+#include <unordered_map>
+#include <mysql/mysql.h>
+
+#include <lock/locker.h>
 
 class HTTPConnection {
 public:
@@ -81,5 +86,9 @@ private:
   bool linger_;
   char* host_;
 
+  std::string request_content_;
+  std::unordered_map<std::string, std::string> user_;
+  Mutex user_lock_;
+  MYSQL* sql_conn_;
 
 };

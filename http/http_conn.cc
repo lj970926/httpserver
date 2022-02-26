@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <string>
+
+using namespace std;
+
+const char* html_root = "./public";
 
 int SetNonBlocking(int fd) {
   int old_flags = fcntl(fd, F_GETFL);
@@ -221,6 +226,70 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseHeader(char* text) {
 }
 
 HTTPConnection::HTTPCode HTTPConnection::Response() {
-  return BAD_REQUEST;
+  char flag = url_[1];
+  string file_path = html_root;
+  if (cgi_ && (flag == '2' || flag == '3')) {
+    string name, passwd;
+    int delim = request_content_.find('&');
+    name = request_content_.substr(5, delim - 5);
+    passwd = request_content_.substr(delim + 1);
+    if (flag == '3') {
+      if (user_.find(name) == user_.end()) {
+        string sql_insert = "INSERT INTO user(username, passwd) VALUES('";
+        sql_insert += name;
+        sql_insert += "', '";
+        sql_insert += passwd;
+        sql_insert += "')";
+
+        user_lock_.Lock();
+        int res = mysql_query(sql_insert, sql_conn_);
+        user_[name] = passwd;
+        user_lock_.Unlock();
+        strcpy(url_, res == 0 ? "log.html" : "registerError.html");
+      }
+      else {
+        strcpy(url_, "registerError.html");
+      }
+    }
+    else if (flag == '2') {
+      if (user_.find(name) != user_.end() && user_[name] == passwd)
+        strcpy(url_, "welcome.html");
+      else
+        strcpy(url_, "logError.html");
+    }
+
+    switch (flag) {
+    case '0':
+      file_path += "/register.html";
+      break;
+    case '1':
+      file_path += "/log.html";
+      break;
+    case '5':
+      file_path += "/picture.html";
+      break;
+    case '6':
+      file_path += "/video.html";
+      break;
+    case '7':
+      file_path += "/fans.html";
+      break;
+    default:
+      file_path += url_;
+    }
+
+    //TODO
+    
+  }
+}
+
+HTTPConnection::HTTPCode HTTPConnection::__ParseContent(char* text) {
+  if (read_idx_ >= checked_idx_ + content_length_) {
+    text[content_length_] = '\0';
+    request_content_ = text;
+    return GET_REQUEST;
+  }
+
+  return NO_REQUEST;
 }
 
