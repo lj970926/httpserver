@@ -9,6 +9,8 @@
 #include <sys/mman.h>
 #include <string>
 
+#include <logger/log.h>
+
 using namespace std;
 
 const char* html_root = "./public";
@@ -245,21 +247,20 @@ HTTPConnection::HTTPCode HTTPConnection::Response() {
         sql_insert += "')";
 
         user_lock_.Lock();
-        int res = mysql_query(sql_insert, sql_conn_);
+        int res = mysql_query(sql_conn_, sql_insert.c_str());
         user_[name] = passwd;
         user_lock_.Unlock();
         strcpy(url_, res == 0 ? "log.html" : "registerError.html");
-      }
-      else {
+      } else {
         strcpy(url_, "registerError.html");
       }
-    }
-    else if (flag == '2') {
+    } else {
       if (user_.find(name) != user_.end() && user_[name] == passwd)
         strcpy(url_, "welcome.html");
       else
         strcpy(url_, "logError.html");
     }
+  }
 
     switch (flag) {
     case '0':
@@ -288,11 +289,9 @@ HTTPConnection::HTTPCode HTTPConnection::Response() {
     if (!S_ISREG(file_stat_.st_mode))
       return BAD_REQUEST;
     int fd = open(file_path.c_str(), O_RDONLY);
-    file_address_ = (char*)mmap(0, file_stat_.st_size, PROT_READ, MAP_PRIVATE, 0);
+    file_address_ = (char*)mmap(0, file_stat_.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
     return FILE_REQUEST;
-    
-  }
 }
 
 HTTPConnection::HTTPCode HTTPConnection::__ParseContent(char* text) {
@@ -325,6 +324,16 @@ bool HTTPConnection::__AddContent(const char* content) {
 }
 
 bool HTTPConnection::__AddResponse(const char* format, ...) {
-  if (write_idx_ > )
+  if (write_idx_ >= WRITE_BUFFER_SIZE)
+    return false;
+  va_list valist;
+  va_start(valist, format);
+  int len = snprintf(write_buf_ + write_idx_, WRITE_BUFFER_SIZE - write_idx_ - 1, format, valist);
+  va_end(valist);
+  if (write_idx_ + len >= WRITE_BUFFER_SIZE - 1)
+    return false;
+  write_idx_ += len;
+  LOG_INFO("request: %s", write_buf_);
+  return true;
 }
 
