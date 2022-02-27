@@ -312,7 +312,7 @@ bool HTTPConnection::__ProcessWrite(HTTPCode ret) {
 }
 
 bool HTTPConnection::__AddStatusLine(int status, const char* title) {
-  //TODO
+  return __AddResponse("%s %d %s\r\n", "HTTP/1.1", status, title);
 }
 
 bool HTTPConnection::__AddHeaders(const int content_length) {
@@ -335,5 +335,21 @@ bool HTTPConnection::__AddResponse(const char* format, ...) {
   write_idx_ += len;
   LOG_INFO("request: %s", write_buf_);
   return true;
+}
+
+bool HTTPConnection::__AddLinger() {
+  return __AddResponse("Connection:%s\r\n", (linger_ ? "keep-alive" : "close"));
+}
+
+bool HTTPConnection::__AddContentLength(const int content_length) {
+  return __AddResponse("Content-Length:%d\r\n", content_length);
+}
+
+bool HTTPConnection::__AddBlankLine() {
+  return __AddResponse("\r\n");
+}
+
+bool HTTPConnection::__AddContentType() {
+  return __AddResponse("Content-Type:text/html\r\n");
 }
 

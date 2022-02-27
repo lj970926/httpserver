@@ -74,6 +74,10 @@ private:
   bool __AddStatusLine(int status, const char* title);
   bool __AddHeaders(const int content_length);
   bool __AddContent(const char* content);
+  bool __AddLinger();
+  bool __AddContentLength(const int content_length);
+  bool __AddBlankLine();
+  bool __AddContentType();
 
   int sockfd_;
   struct sockaddr_in addr_;
@@ -102,4 +106,6 @@ private:
   MYSQL* sql_conn_;
   struct stat file_stat_;
   char* file_address_;
+
+  bool linger_;
 };
