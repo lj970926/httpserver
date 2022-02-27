@@ -305,9 +305,42 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseContent(char* text) {
 }
 
 bool HTTPConnection::__ProcessWrite(HTTPCode ret) {
+  // response desp
+  const char* error_500_title = "Internal Error";
+  const char* error_500_form = "Internal Server Error.\n";
+  const char* error_404_title = "Not Found";
+  const char* error_404_form = "The requested file was not found in the server.\n";
+  const char* error_400_title = "Bad Request";
+  const char* error_400_form = "Your request has bad syntax.\n";
+  const char* error_403_title = "Forbiden";
+  const char* error_403_form = "Permission denied from the server.\n";
+  const char* ok_200_title = "OK";
+
   switch (ret) {
-  case INTERNAL_ERROR:
-    
+    case INTERNAL_ERROR:
+      __AddStatusLine(500, error_500_title);
+      __AddHeaders(strlen(error_500_form));
+      if (!__AddContent(error_500_form))
+        return false;
+      break;
+    case NO_RESOURCE:
+      __AddStatusLine(404, error_404_title);
+      __AddHeaders(strlen(error_404_form));
+      if (!__AddContent(error_404_form))
+        return false;
+      break;
+    case BAD_REQUEST:
+      __AddStatusLine(400, error_400_title);
+      __AddHeaders(strlen(error_400_form));
+      if (!__AddContent(error_400_form))
+        return false;
+      break;
+    case FORBIDDEN_REQUEST:
+      __AddStatusLine(403, error_403_title);
+      __AddHeaders(strlen(error_403_form));
+      if (!__AddContent(error_403_form))
+        return false;
+      break;
   }
 }
 
@@ -316,11 +349,15 @@ bool HTTPConnection::__AddStatusLine(int status, const char* title) {
 }
 
 bool HTTPConnection::__AddHeaders(const int content_length) {
-  //TODO
+  if (!__AddContentLength(content_length))
+    return false;
+  if (!__AddLinger())
+    return false;
+  return __AddBlankLine();
 }
 
 bool HTTPConnection::__AddContent(const char* content) {
-  //TODO
+  return __AddResponse(content);
 }
 
 bool HTTPConnection::__AddResponse(const char* format, ...) {
