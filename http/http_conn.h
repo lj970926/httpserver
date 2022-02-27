@@ -1,6 +1,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 #include <string.h>
 #include <string>
 #include <unordered_map>
@@ -106,6 +107,7 @@ private:
   MYSQL* sql_conn_;
   struct stat file_stat_;
   char* file_address_;
-
-  bool linger_;
+  struct iovec iov_[2];
+  int iovcnt_;
+  int bytes_to_send_;
 };

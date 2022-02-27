@@ -341,7 +341,29 @@ bool HTTPConnection::__ProcessWrite(HTTPCode ret) {
       if (!__AddContent(error_403_form))
         return false;
       break;
+    case FILE_REQUEST:
+      __AddStatusLine(200, ok_200_title);
+      if (file_stat_.st_size) {
+        __AddHeaders(file_stat_.st_size);
+        iov_[1].iov_base = file_address_;
+        iov_[1].iov_len = file_stat_.st_size;
+        ++iovcnt_;
+        bytes_to_send_ += file_stat_.st_size;
+      } else {
+        const char* ok_form = "<html><body></body></html>";
+        __AddHeaders(strlen(ok_form));
+        if (!__AddContent(ok_form))
+          return false;
+      }
+      break;
+    default:
+      return false;
   }
+  iov_[0].iov_base = write_buf_;
+  iov_[0].iov_len = write_idx_;
+  ++iovcnt_;
+  bytes_to_send_ += write_idx_;
+  return true;
 }
 
 bool HTTPConnection::__AddStatusLine(int status, const char* title) {
