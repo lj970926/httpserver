@@ -8,7 +8,18 @@
 #include <arpa/inet.h>
 
 class Timer;
-class ClientData {
+struct ClientData {
   int sockfd;
+  struct sockaddr_in client_addr;
+  Timer* client_timer;
 };
+
+class Timer {
+public:
+  void tick();
+
+private:
+  ClientData* client_data;
+};
+
 #endif //HTTPSERVER_TIMER_H
