@@ -412,3 +412,11 @@ bool HTTPConnection::__AddContentType() {
   return __AddResponse("Content-Type:text/html\r\n");
 }
 
+void HTTPConnection::InitUserInfo(ConnectionPool* conn_pool) {
+  //TODO
+}
+
+void HTTPConnection::CloseConnection() {
+  //TODO
+}
+

@@ -79,11 +79,25 @@ int main(int argc,  char* argv[])
     printf("Bind error\n");
     return -1;
   }
+
+  //create pipe
+  if (socketpair(PF_UNIX, SOCK_STREAM, 0, pipefd) < 0) {
+    printf("Fail to create pipe\n");
+    return -1;
+  }
+
   //crate epoll and add events
   epoll_event events[MAX_EVENT_NUMS];
   int epollfd = epoll_create(1);
 
   Addfd(epollfd, serv_sock, false);
+
+  SetNonBlocking(pipefd[1]);
+  Addfd(epollfd, pipefd[0], false);
+
+  //add sig handler
+  AddSigHandler(SIGALRM, SigHandler, false);
+  AddSigHandler(SIGTERM, SigHandler, false);
 
   return 0;
 }

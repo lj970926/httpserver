@@ -8,6 +8,7 @@
 #include <mysql/mysql.h>
 
 #include <lock/locker.h>
+#include <mysqlconn/sql_connection_pool.h>
 
 class HTTPConnection {
 public:
@@ -58,6 +59,7 @@ public:
   bool ReadOnce();
   void CloseConnection();
   bool Write();
+  void InitUserInfo(ConnectionPool* conn_pool);
 
   int epollfd_;
 
