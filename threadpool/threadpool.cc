@@ -6,7 +6,8 @@ ThreadPool<T>::ThreadPool(ConnectionPool* pool, int thread_number, int max_reque
     : sql_pool_(pool),
       thread_number_(thread_number),
       stop_(false),
-      threads_(NULL) {
+      threads_(NULL),
+      max_requests_(max_requests){
 
   if (thread_number_ <= 0 || max_requests_ <= 0)
     throw std::exception();
