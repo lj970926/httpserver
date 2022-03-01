@@ -176,6 +176,23 @@ int main(int argc,  char* argv[])
           }
         }
       } else if (events[i].events & EPOLLIN) {
+        Timer* timer = client_data[sockfd].client_timer;
+        if (http_conns[sockfd].ReadOnce()) {
+          LOG_INFO("Deal with client(%s)", inet_ntoa(client_data[sockfd].client_addr.sin_addr));
+          thread_pool.Append(&http_conns[sockfd]);
+
+          if (timer) {
+            timer->Reset(time(NULL) + 3 * TIME_SLOT);
+            LOG_INFO("Adjust timer once");
+            timer_list.AdjustTimer(timer);
+          }
+        } else {
+          if (timer) {
+            timer->Callback(&client_data[sockfd]);
+            timer_list.DeleteTimer(timer);
+          }
+        }
+      } else if (events[i].events & EPOLLOUT) {
 
       }
     }

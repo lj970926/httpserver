@@ -20,6 +20,7 @@ public:
   Timer(ClientData* clnt_data, time_t expire, void (*callback)(ClientData*));
   void Tick();
   void Callback(ClientData* clnt_data);
+  void Reset(time_t time);
 
 private:
   ClientData* client_data_;
@@ -31,6 +32,7 @@ class TimerList {
 public:
   void AddTimer(Timer* timer);
   void DeleteTimer(Timer* timer);
+  void AdjustTimer(Timer* timer);
 };
 
 #endif //HTTPSERVER_TIMER_H
