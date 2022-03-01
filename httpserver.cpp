@@ -57,6 +57,10 @@ void Callback(ClientData* clnt_data) {
 
 }
 
+void TimeoutHandler() {
+
+}
+
 int main(int argc,  char* argv[])
 {
   if (argc != 3) {
@@ -193,10 +197,33 @@ int main(int argc,  char* argv[])
           }
         }
       } else if (events[i].events & EPOLLOUT) {
+        Timer* timer = client_data[sockfd].client_timer;
+        if (http_conns[sockfd].Write()) {
+          LOG_INFO("send data to client(%s)", inet_ntoa(client_data[sockfd].client_addr.sin_addr));
 
+          if (timer) {
+            LOG_INFO("Adjust timer once");
+            timer->Reset(time(NULL) + 3 * TIME_SLOT);
+            timer_list.AddTimer(timer);
+          }
+        } else {
+          if (timer) {
+            timer->Callback(&client_data[sockfd]);
+            timer_list.DeleteTimer(timer);
+          }
+        }
       }
     }
+    if (time_out) {
+      TimeoutHandler();
+      time_out = false;
+    }
   }
-
+  close(epollfd);
+  close(serv_sock);
+  close (pipefd[1]);
+  close(pipefd[0]);
+  delete[] http_conns;
+  delete[] client_data;
   return 0;
 }
