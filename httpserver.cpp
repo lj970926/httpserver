@@ -115,7 +115,9 @@ int main(int argc,  char* argv[])
   AddSigHandler(SIGALRM, SigHandler, false);
   AddSigHandler(SIGTERM, SigHandler, false);
 
+  //create client data and timer
   auto client_data = new ClientData[MAX_FD_NUMS];
+  TimerList timer_list;
   bool time_out = false;
   bool stop_server = false;
 
@@ -150,6 +152,30 @@ int main(int argc,  char* argv[])
         client_data[connfd].client_addr = clnt_addr;
         auto timer = new Timer(&client_data[connfd], time(NULL) + 3 * TIME_SLOT, Callback);
         client_data[connfd].client_timer = timer;
+        timer_list.AddTimer(timer);
+      } else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
+        Timer* timer = client_data[i].client_timer;
+        timer->Callback(&client_data[i]);
+
+        if (timer) {
+          timer_list.DeleteTimer(timer);
+        }
+      } else if (sockfd == pipefd[0] && (events[i].events & EPOLLIN)) {
+        //signal handler
+        char signals[1024];
+        int ret = read(pipefd[0], signals, sizeof(signals));
+        if (ret <= 0)
+          continue;
+        for (int i = 0; i < ret; ++i) {
+          switch (signals[i]) {
+            case SIGALRM:
+              time_out = true;
+              break;
+            case SIGTERM:
+              stop_server = true;
+          }
+        }
+      } else if (events[i].events & EPOLLIN) {
 
       }
     }
