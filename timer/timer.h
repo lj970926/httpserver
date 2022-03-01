@@ -6,6 +6,7 @@
 #define HTTPSERVER_TIMER_H
 
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 class Timer;
 struct ClientData {
@@ -16,10 +17,17 @@ struct ClientData {
 
 class Timer {
 public:
-  void tick();
+  Timer(ClientData* clnt_data, time_t expire, void (*callback)(ClientData*));
+  void Tick();
 
 private:
-  ClientData* client_data;
+  ClientData* client_data_;
+  time_t expire_;
+  void (*callback_)(ClientData*);
+};
+
+class TimerList {
+
 };
 
 #endif //HTTPSERVER_TIMER_H

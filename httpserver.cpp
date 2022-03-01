@@ -18,6 +18,7 @@
 
 #define MAX_FD_NUMS  65536
 #define MAX_EVENT_NUMS 10000
+#define TIME_SLOT 5
 
 using namespace std;
 
@@ -52,10 +53,14 @@ void SendErrorMsg(int connfd, const char* info) {
   close(connfd);
 }
 
+void Callback(ClientData* clnt_data) {
+
+}
+
 int main(int argc,  char* argv[])
 {
   if (argc != 3) {
-    printf("Usage: %s <ip> <port>\n", argv[0]);
+    printf("Usage: %s <ip> <port>\n", basename(argv[0]));
     return -1;
   }
   //init
@@ -114,6 +119,8 @@ int main(int argc,  char* argv[])
   bool time_out = false;
   bool stop_server = false;
 
+  //main loop
+
   while (!stop_server) {
     int event_number = epoll_wait(epollfd, events, MAX_EVENT_NUMS, -1);
     if (event_number < 0 && errno != EINTR) {
@@ -123,7 +130,7 @@ int main(int argc,  char* argv[])
 
     for (int i = 0; i < event_number; ++i) {
       int sockfd = events[i].data.fd;
-
+      //new request
       if (sockfd == serv_sock) {
         struct sockaddr_in clnt_addr;
         socklen_t clnt_addr_size = sizeof(clnt_addr);
@@ -137,6 +144,13 @@ int main(int argc,  char* argv[])
           LOG_ERROR("Internal server busy");
           SendErrorMsg(connfd, "Internal server busy");
         }
+
+        http_conns[connfd].Init(connfd, clnt_addr);
+        client_data[connfd].sockfd = connfd;
+        client_data[connfd].client_addr = clnt_addr;
+        auto timer = new Timer(&client_data[connfd], time(NULL) + 3 * TIME_SLOT, Callback);
+        client_data[connfd].client_timer = timer;
+
       }
     }
   }
