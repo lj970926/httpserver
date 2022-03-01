@@ -3,6 +3,7 @@
 //
 
 #include "timer.h"
+#include <logger/log.h>
 
 Timer::Timer(ClientData *clnt_data, time_t expire, void (*callback)(ClientData *))
     : expire_(expire),
@@ -94,5 +95,24 @@ void TimerList::AdjustTimer(Timer *timer) {
   auto new_timer = new Timer(timer);
   DeleteTimer(timer);
   AddTimer(new_timer);
+}
+
+void TimerList::Tick() {
+  if (!head_)
+    return;
+  LOG_INFO("Timer tick");
+
+  time_t cur = time(NULL);
+
+  for (auto p = head_; p;) {
+    if (cur < p->expire())
+      break;
+    p->Callback();
+    head_ = p->next;
+    if (head_)
+      head_->prev = NULL;
+    delete p;
+    p = head_;
+  }
 }
 
