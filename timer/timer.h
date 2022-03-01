@@ -23,6 +23,7 @@ public:
   time_t expire();
   Timer* prev;
   Timer* next;
+  Timer(Timer* timer);
 
 private:
   ClientData* client_data_;

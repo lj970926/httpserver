@@ -23,6 +23,14 @@ void Timer::Callback() {
   callback_(client_data_);
 }
 
+Timer::Timer(Timer *timer) {
+  client_data_ = timer->client_data_;
+  callback_ = timer->callback_;
+  expire_ = timer->expire_;
+  prev = NULL;
+  next = NULL;
+}
+
 TimerList::TimerList()
     : head_(NULL),
       tail_(NULL) {}
@@ -55,3 +63,36 @@ void TimerList::AddTimer(Timer *timer) {
   tail_->next = timer;
   tail_ = timer;
 }
+
+void TimerList::DeleteTimer(Timer *timer) {
+  if (!timer)
+    return;
+
+  if (timer == head_) {
+    head_ = timer->next;
+    if (head_)
+      head_->prev = NULL;
+  }
+
+  if (timer == tail_) {
+    tail_ =timer->prev;
+    if (tail_)
+      tail_->next = NULL;
+    delete timer;
+    return;
+  }
+  if (timer != head_ && timer != tail_) {
+    timer->prev->next = timer->next;
+    timer->next->prev = timer->prev;
+  }
+  delete timer;
+}
+
+void TimerList::AdjustTimer(Timer *timer) {
+  if (!timer)
+    return;
+  auto new_timer = new Timer(timer);
+  DeleteTimer(timer);
+  AddTimer(new_timer);
+}
+
