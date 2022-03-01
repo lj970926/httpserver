@@ -18,9 +18,11 @@ struct ClientData {
 class Timer {
 public:
   Timer(ClientData* clnt_data, time_t expire, void (*callback)(ClientData*));
-  void Tick();
-  void Callback(ClientData* clnt_data);
+  void Callback();
   void Reset(time_t time);
+  time_t expire();
+  Timer* prev;
+  Timer* next;
 
 private:
   ClientData* client_data_;
@@ -30,9 +32,16 @@ private:
 
 class TimerList {
 public:
+  TimerList();
+  ~TimerList();
   void AddTimer(Timer* timer);
   void DeleteTimer(Timer* timer);
   void AdjustTimer(Timer* timer);
+  void Tick();
+
+private:
+  Timer* head_;
+  Timer* tail_;
 };
 
 #endif //HTTPSERVER_TIMER_H

@@ -29,6 +29,8 @@ void Removefd(int epollfd, int fd);
 
 //global variables
 int pipefd[2];
+int epollfd;
+TimerList timer_list;
 
 void AddSigHandler(int sig, void (*handler)(int), bool restart = true) {
   struct sigaction act;
@@ -54,11 +56,17 @@ void SendErrorMsg(int connfd, const char* info) {
 }
 
 void Callback(ClientData* clnt_data) {
+  if (clnt_data) {
 
+    Removefd(epollfd, clnt_data->sockfd);
+    close(clnt_data->sockfd);
+    LOG_INFO("close fd %d", clnt_data->sockfd);
+  }
 }
 
 void TimeoutHandler() {
-
+  timer_list.Tick();
+  alarm(TIME_SLOT);
 }
 
 int main(int argc,  char* argv[])
@@ -108,7 +116,7 @@ int main(int argc,  char* argv[])
 
   //crate epoll and add events
   epoll_event events[MAX_EVENT_NUMS];
-  int epollfd = epoll_create(1);
+  epollfd = epoll_create(1);
 
   Addfd(epollfd, serv_sock, false);
 
@@ -121,7 +129,6 @@ int main(int argc,  char* argv[])
 
   //create client data and timer
   auto client_data = new ClientData[MAX_FD_NUMS];
-  TimerList timer_list;
   bool time_out = false;
   bool stop_server = false;
 
@@ -159,7 +166,7 @@ int main(int argc,  char* argv[])
         timer_list.AddTimer(timer);
       } else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
         Timer* timer = client_data[i].client_timer;
-        timer->Callback(&client_data[i]);
+        timer->Callback();
 
         if (timer) {
           timer_list.DeleteTimer(timer);
@@ -192,7 +199,7 @@ int main(int argc,  char* argv[])
           }
         } else {
           if (timer) {
-            timer->Callback(&client_data[sockfd]);
+            timer->Callback();
             timer_list.DeleteTimer(timer);
           }
         }
@@ -208,7 +215,7 @@ int main(int argc,  char* argv[])
           }
         } else {
           if (timer) {
-            timer->Callback(&client_data[sockfd]);
+            timer->Callback();
             timer_list.DeleteTimer(timer);
           }
         }
