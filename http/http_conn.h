@@ -60,6 +60,7 @@ public:
   void CloseConnection();
   bool Write();
   void InitUserInfo(ConnectionPool* conn_pool);
+  static int user_count();
 
   int epollfd_;
 
@@ -84,6 +85,7 @@ private:
 
   int sockfd_;
   struct sockaddr_in addr_;
+  static int user_count_;
 
   char read_buf_[READ_BUFFER_SIZE];
   char write_buf_[WRITE_BUFFER_SIZE];

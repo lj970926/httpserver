@@ -15,6 +15,8 @@ using namespace std;
 
 const char* html_root = "./public";
 
+int HTTPConnection::user_count_ = 0;
+
 int SetNonBlocking(int fd) {
   int old_flags = fcntl(fd, F_GETFL);
   fcntl(fd, F_SETFL, old_flags | O_NONBLOCK);

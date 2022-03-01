@@ -46,6 +46,12 @@ void SigHandler(int sig) {
   errno = old_errno;
 }
 
+void SendErrorMsg(int connfd, const char* info) {
+  printf("%s\n", info);
+  write(connfd, info, strlen(info));
+  close(connfd);
+}
+
 int main(int argc,  char* argv[])
 {
   if (argc != 3) {
@@ -80,6 +86,11 @@ int main(int argc,  char* argv[])
     return -1;
   }
 
+  if (listen(serv_sock, 5) < 0) {
+    printf("Listen error\n");
+    return -1;
+  }
+
   //create pipe
   if (socketpair(PF_UNIX, SOCK_STREAM, 0, pipefd) < 0) {
     printf("Fail to create pipe\n");
@@ -98,6 +109,37 @@ int main(int argc,  char* argv[])
   //add sig handler
   AddSigHandler(SIGALRM, SigHandler, false);
   AddSigHandler(SIGTERM, SigHandler, false);
+
+  auto client_data = new ClientData[MAX_FD_NUMS];
+  bool time_out = false;
+  bool stop_server = false;
+
+  while (!stop_server) {
+    int event_number = epoll_wait(epollfd, events, MAX_EVENT_NUMS, -1);
+    if (event_number < 0 && errno != EINTR) {
+      LOG_ERROR("epoll failure");
+      break;
+    }
+
+    for (int i = 0; i < event_number; ++i) {
+      int sockfd = events[i].data.fd;
+
+      if (sockfd == serv_sock) {
+        struct sockaddr_in clnt_addr;
+        socklen_t clnt_addr_size = sizeof(clnt_addr);
+        int connfd = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
+        if (connfd < 0) {
+          LOG_ERROR("accept error, errno: %d", errno);
+          continue;
+        }
+
+        if (HTTPConnection::user_count() >= MAX_FD_NUMS) {
+          LOG_ERROR("Internal server busy");
+          SendErrorMsg(connfd, "Internal server busy");
+        }
+      }
+    }
+  }
 
   return 0;
 }
