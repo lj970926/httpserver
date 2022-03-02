@@ -35,3 +35,12 @@ private:
   int num_free_con_;
   int num_max_con_;
 };
+
+class ConnectionRAII {
+public:
+  ConnectionRAII(MYSQL** con, ConnectionPool* pool_);
+  ~ConnectionRAII();
+private:
+  ConnectionPool* pool_;
+  MYSQL* conn_;
+};

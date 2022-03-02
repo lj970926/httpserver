@@ -88,3 +88,12 @@ void ConnectionPool::Destroy() {
 ConnectionPool::~ConnectionPool() {
   Destroy();
 }
+
+ConnectionRAII::ConnectionRAII(MYSQL** con, ConnectionPool* pool): pool_(pool) {
+  conn_ = pool->GetConnection();
+  *con = conn_;
+}
+
+ConnectionRAII::~ConnectionRAII() {
+  pool_->ReleaseConnection(conn_);
+}
