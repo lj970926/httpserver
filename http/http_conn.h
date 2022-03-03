@@ -54,7 +54,7 @@ public:
   HTTPConnection() {}
   ~HTTPConnection() {}
 
-  void Init(int sockfd, struct sockaddr_in& addr);
+  void Init(int epollfd, int sockfd, struct sockaddr_in& addr);
   void Process();
   bool ReadOnce();
   void CloseConnection();
@@ -98,12 +98,12 @@ private:
   CheckState check_state_;
   Method method_;
   bool cgi_ = false;
-  char* version_;
-  char* url_;
+  char* version_ = NULL;
+  char* url_ = NULL;
 
-  int content_length_;
-  bool linger_;
-  char* host_;
+  int content_length_ = 0;
+  bool linger_ = false;
+  char* host_ = NULL;
 
   std::string request_content_;
   MYSQL* sql_conn_;

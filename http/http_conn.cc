@@ -49,13 +49,35 @@ void Removefd(int epollfd, int fd) {
 }
 
 void HTTPConnection::__Init() {
-  exit(1);
+  read_idx_ = 0;
+  checked_idx_ = 0;
+  start_line_ = 0;
+  write_idx_ = 0;
+  check_state_ = CHECK_STATE_REQUESTLINE;
+  linger_ = false;
+  method_ = GET;
+  cgi_ = false;
+  version_ = NULL;
+  url_ = NULL;
+  content_length_ = 0;
+  host_ = NULL;
+  request_content_.clear();
+  sql_conn_ = NULL;
+  file_address_ = NULL;
+  iovcnt_ = 0;
+  bytes_to_send_ = 0;
+
+  memset(read_buf_, 0, READ_BUFFER_SIZE);
+  memset(write_buf_, 0, WRITE_BUFFER_SIZE);
+
 }
 
-void HTTPConnection::Init(int sockfd, struct sockaddr_in& addr)
+void HTTPConnection::Init(int epollfd, int sockfd, struct sockaddr_in& addr)
 {
+  epollfd_ = epollfd;
   sockfd_ = sockfd;
   addr_ = addr;
+  __Init();
 }
 
 bool HTTPConnection::ReadOnce() {
@@ -447,7 +469,7 @@ bool HTTPConnection::Write() {
 
   if (bytes_to_send_ == 0) {
     Modfd(epollfd_, sockfd_, EPOLLIN);
-    init();
+    __Init();
     return true;
   }
 
@@ -474,7 +496,7 @@ bool HTTPConnection::Write() {
     if (bytes_to_send_ == 0) {
       Modfd(epollfd_, sockfd_, EPOLLIN);
       if (linger_) {
-        init();
+        __Init();
         return true;
       } else {
         return false;

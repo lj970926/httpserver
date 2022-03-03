@@ -158,7 +158,7 @@ int main(int argc,  char* argv[])
           SendErrorMsg(connfd, "Internal server busy");
         }
 
-        http_conns[connfd].Init(connfd, clnt_addr);
+        http_conns[connfd].Init(epollfd, connfd, clnt_addr);
         client_data[connfd].sockfd = connfd;
         client_data[connfd].client_addr = clnt_addr;
         auto timer = new Timer(&client_data[connfd], time(NULL) + 3 * TIME_SLOT, Callback);
