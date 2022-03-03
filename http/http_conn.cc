@@ -17,6 +17,9 @@ const char* html_root = "./public";
 
 int HTTPConnection::user_count_ = 0;
 
+std::unordered_map<std::string, std::string> user;
+Mutex user_lock;
+
 int SetNonBlocking(int fd) {
   int old_flags = fcntl(fd, F_GETFL);
   fcntl(fd, F_SETFL, old_flags | O_NONBLOCK);
@@ -241,23 +244,23 @@ HTTPConnection::HTTPCode HTTPConnection::Response() {
     name = request_content_.substr(5, delim - 5);
     passwd = request_content_.substr(delim + 1);
     if (flag == '3') {
-      if (user_.find(name) == user_.end()) {
+      if (user.find(name) == user.end()) {
         string sql_insert = "INSERT INTO user(username, passwd) VALUES('";
         sql_insert += name;
         sql_insert += "', '";
         sql_insert += passwd;
         sql_insert += "')";
 
-        user_lock_.Lock();
+        user_lock.Lock();
         int res = mysql_query(sql_conn_, sql_insert.c_str());
-        user_[name] = passwd;
-        user_lock_.Unlock();
+        user[name] = passwd;
+        user_lock.Unlock();
         strcpy(url_, res == 0 ? "log.html" : "registerError.html");
       } else {
         strcpy(url_, "registerError.html");
       }
     } else {
-      if (user_.find(name) != user_.end() && user_[name] == passwd)
+      if (user.find(name) != user.end() && user[name] == passwd)
         strcpy(url_, "welcome.html");
       else
         strcpy(url_, "logError.html");
@@ -415,10 +418,26 @@ bool HTTPConnection::__AddContentType() {
 }
 
 void HTTPConnection::InitUserInfo(ConnectionPool* conn_pool) {
-  //TODO
+  MYSQL* conn;
+  ConnectionRAII con_raii(&conn, conn_pool);
+  if (mysql_query(conn, "SELECT username, passwd from user")) {
+    LOG_ERROR("SELECT error: %s", mysql_error(conn));
+  }
+
+  MYSQL_RES* result = mysql_store_result(conn);
+
+  while (MYSQL_ROW row = mysql_fetch_row(result)) {
+    string name = row[0];
+    string passwd = row[1];
+    user[name] = passwd;
+  }
 }
 
 void HTTPConnection::CloseConnection() {
   //TODO
+}
+
+void HTTPConnection::set_mysql_conn(MYSQL *conn) {
+  sql_conn_ = conn;
 }
 

@@ -61,6 +61,7 @@ public:
   bool Write();
   void InitUserInfo(ConnectionPool* conn_pool);
   static int user_count();
+  void set_mysql_conn(MYSQL* conn);
 
   int epollfd_;
 
@@ -106,12 +107,11 @@ private:
   char* host_;
 
   std::string request_content_;
-  std::unordered_map<std::string, std::string> user_;
-  Mutex user_lock_;
   MYSQL* sql_conn_;
   struct stat file_stat_;
   char* file_address_;
   struct iovec iov_[2];
   int iovcnt_;
   int bytes_to_send_;
+
 };
