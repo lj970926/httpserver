@@ -434,10 +434,52 @@ void HTTPConnection::InitUserInfo(ConnectionPool* conn_pool) {
 }
 
 void HTTPConnection::CloseConnection() {
-  //TODO
+  Removefd(epollfd_, sockfd_);
+  close(sockfd_);
+  --user_count_;
 }
 
 void HTTPConnection::set_mysql_conn(MYSQL *conn) {
   sql_conn_ = conn;
+}
+
+bool HTTPConnection::Write() {
+
+  if (bytes_to_send_ == 0) {
+    Modfd(epollfd_, sockfd_, EPOLLIN);
+    init();
+    return true;
+  }
+
+  while (true) {
+    int write_cnt = writev(sockfd_, iov_, iovcnt_);
+    if (write_cnt < 0) {
+      if (errno == EAGAIN) {
+        Modfd(epollfd_, sockfd_, EPOLLOUT);
+        return true;
+      }
+      return false;
+    }
+    bytes_to_send_ -= write_cnt;
+
+    if (write_cnt >= iov_[0].iov_len) {
+      iov_[1].iov_base = (char*)iov_[1].iov_base + (write_cnt - iov_[0].iov_len);
+      iov_[1].iov_len = bytes_to_send_;
+      iov_[0].iov_len = 0;
+    } else {
+      iov_[0].iov_base  = (char*)iov_[0].iov_base + write_cnt;
+      iov_[0].iov_len -=write_cnt;
+    }
+
+    if (bytes_to_send_ == 0) {
+      Modfd(epollfd_, sockfd_, EPOLLIN);
+      if (linger_) {
+        init();
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
 }
 

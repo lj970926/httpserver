@@ -81,7 +81,7 @@ int main(int argc,  char* argv[])
   conn_pool->Init("localhost", "http","lj970926", "httpdb", 3306, 8);
   ThreadPool<HTTPConnection> thread_pool(conn_pool);
   auto* http_conns = new HTTPConnection[MAX_FD_NUMS];
-
+  http_conns->InitUserInfo(conn_pool);
   //create socket
   int serv_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (serv_sock < 0) {

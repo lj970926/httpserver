@@ -63,8 +63,6 @@ public:
   static int user_count();
   void set_mysql_conn(MYSQL* conn);
 
-  int epollfd_;
-
 private:
   void __Init();
   HTTPCode __ParseRequestLine(char* text);
@@ -84,6 +82,7 @@ private:
   bool __AddBlankLine();
   bool __AddContentType();
 
+  int epollfd_;
   int sockfd_;
   struct sockaddr_in addr_;
   static int user_count_;
