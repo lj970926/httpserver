@@ -146,3 +146,13 @@ void Log::Write(int level, const char* format, ...) {
     mutex_.Unlock();
   }
 }
+
+Log::Log() {
+  cur_lines_ = 0;
+  is_async_mode_ = false;
+}
+
+Log::~Log() {
+  if (fp_)
+    fclose(fp_);
+}

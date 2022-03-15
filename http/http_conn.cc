@@ -13,7 +13,7 @@
 
 using namespace std;
 
-const char* html_root = "./public";
+const char* html_root = "/home/lijin/code/httpserver/public";
 
 int HTTPConnection::user_count_ = 0;
 
@@ -77,6 +77,8 @@ void HTTPConnection::Init(int epollfd, int sockfd, struct sockaddr_in& addr)
   epollfd_ = epollfd;
   sockfd_ = sockfd;
   addr_ = addr;
+  ++user_count_;
+  Addfd(epollfd, sockfd, true);
   __Init();
 }
 
@@ -186,7 +188,7 @@ HTTPConnection::LineStatus HTTPConnection::__ParseLine() {
 }
 
 HTTPConnection::HTTPCode HTTPConnection::__ParseRequestLine(char* text) {
-  char* method = strtok(text, "\t");
+  char* method = strtok(text, " \t");
   if (strcasecmp(method, "GET") == 0)
     method_ = GET;
   else if (strcasecmp(method, "POST") == 0) {
@@ -196,11 +198,11 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseRequestLine(char* text) {
   else
     return BAD_REQUEST;
 
-  version_ = strtok(NULL, "\t");
-  if (!version_ || !strcasecmp(version_, "HTTP/1.1"))
-    return BAD_REQUEST;
+  url_ = strtok(NULL, " \t");
 
-  url_ = strtok(NULL, "\t");
+  version_ = strtok(NULL, " \t");
+  if (!version_ || strcasecmp(version_, "HTTP/1.1"))
+    return BAD_REQUEST;
 
   if (strncasecmp(url_, "http://", 7) == 0) {
     url_ += 7;
@@ -235,23 +237,23 @@ HTTPConnection::HTTPCode HTTPConnection::__ParseHeader(char* text) {
 
   if (strncasecmp(text, "Connection:", 11) == 0) {
     text += 11;
-    text += strspn(text, "\t");
+    text += strspn(text, " \t");
     if (strcasecmp(text, "keep-alive") == 0)
       linger_ = true;
   }
   else if (strncasecmp(text, "Content-length:", 15) == 0) {
     text += 15;
-    text += strspn(text, "\t");
+    text += strspn(text, " \t");
 
     content_length_ = atol(text);
   }
   else if (strncasecmp(text, "Host:", 5) == 0) {
     text += 5;
-    text += strspn(text, "\t");
+    text += strspn(text, " \t");
     host_ = text;
   }
   else {
-    exit(1);
+    LOG_INFO("unknown header: %s", text);
   }
 
   return NO_REQUEST;
@@ -414,7 +416,7 @@ bool HTTPConnection::__AddResponse(const char* format, ...) {
     return false;
   va_list valist;
   va_start(valist, format);
-  int len = snprintf(write_buf_ + write_idx_, WRITE_BUFFER_SIZE - write_idx_ - 1, format, valist);
+  int len = vsnprintf(write_buf_ + write_idx_, WRITE_BUFFER_SIZE - write_idx_ - 1, format, valist);
   va_end(valist);
   if (write_idx_ + len >= WRITE_BUFFER_SIZE - 1)
     return false;
@@ -480,6 +482,7 @@ bool HTTPConnection::Write() {
         Modfd(epollfd_, sockfd_, EPOLLOUT);
         return true;
       }
+      __Unmap();
       return false;
     }
     bytes_to_send_ -= write_cnt;
@@ -494,6 +497,7 @@ bool HTTPConnection::Write() {
     }
 
     if (bytes_to_send_ == 0) {
+      __Unmap();
       Modfd(epollfd_, sockfd_, EPOLLIN);
       if (linger_) {
         __Init();
@@ -502,6 +506,17 @@ bool HTTPConnection::Write() {
         return false;
       }
     }
+  }
+}
+
+int HTTPConnection::user_count() {
+  return user_count_;
+}
+
+void HTTPConnection::__Unmap() {
+  if (file_address_) {
+    munmap(file_address_, file_stat_.st_size);
+    file_address_ = NULL;
   }
 }
 

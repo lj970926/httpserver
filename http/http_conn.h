@@ -81,6 +81,7 @@ private:
   bool __AddContentLength(const int content_length);
   bool __AddBlankLine();
   bool __AddContentType();
+  void __Unmap();
 
   int epollfd_;
   int sockfd_;

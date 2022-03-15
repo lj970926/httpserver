@@ -38,9 +38,9 @@ void ConnectionPool::Init(const string &host, const string &user, const string &
     }
 
     pool_.push_back(con);
-    num_max_con_ = num_free_con_ = max_conn;
-    sem_ = Sem(num_free_con_);
   }
+  num_max_con_ = num_free_con_ = max_conn;
+  sem_ = Sem(num_free_con_);
 }
 
 MYSQL* ConnectionPool::GetConnection() {

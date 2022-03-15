@@ -78,7 +78,7 @@ int main(int argc,  char* argv[])
   //init
   Log::GetInstance()->Init("Servlog", 2000, 80000, 8);
   ConnectionPool *conn_pool = ConnectionPool::GetInstance();
-  conn_pool->Init("localhost", "http","lj970926", "httpdb", 3306, 8);
+  conn_pool->Init("localhost", "httpserver","lj970926", "httpserv", 3306, 8);
   ThreadPool<HTTPConnection> thread_pool(conn_pool);
   auto* http_conns = new HTTPConnection[MAX_FD_NUMS];
   http_conns->InitUserInfo(conn_pool);
@@ -234,3 +234,5 @@ int main(int argc,  char* argv[])
   delete[] client_data;
   return 0;
 }
+
+

@@ -116,3 +116,12 @@ void TimerList::Tick() {
   }
 }
 
+TimerList::~TimerList() {
+  auto p = head_;
+  while (p) {
+    head_ = p->next;
+    delete p;
+    p = head_;
+  }
+}
+
